@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Fact feed</h1>
+    <p>Status: <span id="status">Offline</span></p>
+    <div id="feed"></div>
+  </body>
+
+  <script>
+    const events = new EventSource('http://localhost:8080/events');
+    const createFeedItem = (info, source) => {
+      const div = document.createElement('div');
+      const title = document.createElement('p');
+      const para = document.createElement('p');
+      title.innerHTML = source;
+      para.innerHTML = info;
+
+      div.appendChild(title);
+      div.appendChild(para);
+
+      return div;
+    };
+    events.onmessage = (event) => {
+      const parsedEvent = JSON.parse(event.data);
+      const frag = new DocumentFragment();
+      const feed = document.getElementById('feed');
+
+      if (parsedEvent.length) {
+        parsedEvent?.map((event) => {
+          frag.appendChild(createFeedItem(event.info, event.source));
+        });
+        feed.appendChild(frag);
+      } else {
+        feed.appendChild(createFeedItem(parsedEvent.info, parsedEvent.source));
+      }
+    };
+    events.onopen = (event) => {
+      const status = document.getElementById('status');
+      status.innerHTML = 'Online';
+    };
+  </script>
+</html>
